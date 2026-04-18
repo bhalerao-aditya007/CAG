@@ -1,0 +1,135 @@
+{
+  "theme": "light",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "design_philosophy": {
+    "identity": "E1: The Anti-AI Designer",
+    "core_principles": [
+      "Fusion over Imitation: Swiss grid rigor meets modern enterprise density. No 'Vercel-look' soft shadows.",
+      "Emotion First: The UI must evoke absolute authority, security, and precision for government auditors.",
+      "Negative Space: Use macro negative space to separate distinct functional modules, but tight micro-spacing within data tables.",
+      "Color as Function: 95% monochrome. Color strictly indicates state (red flags, warnings, success) and primary actions."
+    ]
+  },
+  "typography": {
+    "strategy": "The 'Swiss Brutalist' approach. Radical weight contrast. Highly legible numbers for financial data.",
+    "fonts": {
+      "headings": {
+        "family": "Cabinet Grotesk",
+        "weights": ["300", "400", "500", "700", "800"],
+        "css_import": "@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,400,300,500,700&display=swap');",
+        "tailwind_class": "font-heading"
+      },
+      "body": {
+        "family": "IBM Plex Sans",
+        "weights": ["400", "500", "600"],
+        "css_import": "@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap');",
+        "tailwind_class": "font-sans"
+      },
+      "mono": {
+        "family": "IBM Plex Mono",
+        "weights": ["400", "500"],
+        "css_import": "@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');",
+        "tailwind_class": "font-mono"
+      }
+    },
+    "scale": {
+      "h1": "text-4xl sm:text-5xl tracking-tighter leading-none font-extrabold",
+      "h2": "text-2xl sm:text-3xl tracking-tight leading-tight font-bold",
+      "h3": "text-xl sm:text-2xl tracking-tight leading-snug font-semibold",
+      "h4": "text-lg sm:text-xl tracking-tight font-medium",
+      "body": "text-sm sm:text-base leading-relaxed",
+      "small": "text-xs tracking-wider uppercase",
+      "data": "text-sm font-mono tracking-tight"
+    }
+  },
+  "colors": {
+    "background": {
+      "base": "#FAFAFA",
+      "surface": "#FFFFFF",
+      "overlay": "rgba(250, 250, 250, 0.8)"
+    },
+    "text": {
+      "primary": "#0A0A0A",
+      "secondary": "#525252",
+      "disabled": "#A3A3A3"
+    },
+    "border": {
+      "default": "#E5E5E5",
+      "hover": "#A3A3A3",
+      "active": "#171717",
+      "grid": "rgba(0,0,0,0.05)"
+    },
+    "accents": {
+      "primary": "#1D3557",
+      "primary_hover": "#132338",
+      "critical": "#E63946",
+      "warning": "#F4A261",
+      "success": "#2A9D8F"
+    }
+  },
+  "layout_and_spacing": {
+    "grid_strategy": "Control Room Grid",
+    "container": "max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8",
+    "spacing_scale": {
+      "macro": "gap-8 md:gap-12 lg:gap-16",
+      "micro": "gap-2 sm:gap-4 lg:gap-6",
+      "padding_card": "p-6 lg:p-8"
+    },
+    "surface_styles": {
+      "dashboard_cards": "bg-white border border-[#E5E5E5] rounded-none shadow-none hover:border-[#A3A3A3] transition-colors duration-200",
+      "header": "bg-white/90 backdrop-blur-xl border-b border-[#E5E5E5] sticky top-0 z-50",
+      "data_table": "border-collapse w-full text-left text-sm",
+      "technical_grid": "border-collapse border-r border-b border-border/40"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#1D3557] text-white hover:bg-[#132338] font-medium px-6 py-2.5 transition-colors flex items-center justify-center gap-2 rounded-none",
+      "secondary": "bg-white text-[#0A0A0A] border border-[#E5E5E5] hover:border-[#0A0A0A] font-medium px-6 py-2.5 transition-colors flex items-center justify-center gap-2 rounded-none",
+      "destructive": "bg-[#E63946] text-white hover:bg-[#B32A36] font-medium px-6 py-2.5 transition-colors rounded-none"
+    },
+    "badges": {
+      "critical": "bg-[#E63946]/10 text-[#E63946] border border-[#E63946]/20 px-2.5 py-0.5 text-xs font-mono font-medium uppercase tracking-wider",
+      "high": "bg-[#F4A261]/10 text-[#D97706] border border-[#F4A261]/20 px-2.5 py-0.5 text-xs font-mono font-medium uppercase tracking-wider",
+      "medium": "bg-[#2A9D8F]/10 text-[#2A9D8F] border border-[#2A9D8F]/20 px-2.5 py-0.5 text-xs font-mono font-medium uppercase tracking-wider",
+      "low": "bg-[#E5E5E5] text-[#525252] border border-[#A3A3A3]/20 px-2.5 py-0.5 text-xs font-mono font-medium uppercase tracking-wider"
+    },
+    "inputs": "bg-white border border-[#E5E5E5] focus:border-[#1D3557] focus:ring-1 focus:ring-[#1D3557] rounded-none px-4 py-2 transition-all w-full",
+    "library": "Shadcn UI (heavily customized: remove border-radius completely, use hard 1px borders, replace Inter with IBM Plex Sans for body text)"
+  },
+  "motion": {
+    "philosophy": "Minimalist. Motion is strictly functional for feedback, not decorative.",
+    "hover": "Fast opacity or border color transition (150ms ease).",
+    "page_transitions": "None or extremely subtle fade-in (200ms ease-out)."
+  },
+  "media": {
+    "icons": {
+      "library": "Phosphor Icons (@phosphor-icons/react)",
+      "style": "Regular or Light weight, providing crisp highly readable outlines fitting a data-heavy context."
+    },
+    "images": {
+      "auth_background": {
+        "url": "https://images.unsplash.com/photo-1764412089634-ecbfc7e2760c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTJ8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBjb3Jwb3JhdGUlMjBhcmNoaXRlY3R1cmUlMjBnbGFzcyUyMGdlb21ldHJpY3xlbnwwfHx8fDE3NzY0OTA5NDZ8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Modern glass skyscraper with reflective cloudy sky, used as an abstract trust-building background on the login page with a heavy white/light-grey scrim overlay.",
+        "usage": "bg-white/80 backdrop-blur-md overlay on top of this image"
+      },
+      "empty_state": {
+         "url": "https://images.unsplash.com/photo-1773625680521-24296b61ba25?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxtaW5pbWFsaXN0JTIwY2xlYW4lMjBkZXNrJTIwYWJzdHJhY3R8ZW58MHx8fHwxNzc2NDkwOTQ2fDA&ixlib=rb-4.1.0&q=85",
+         "description": "Sunlight streams across an empty conference table, used for empty states where no rules are flagged.",
+         "usage": "Grayscale with low opacity as an empty state illustration."
+      }
+    }
+  },
+  "instructions_to_main_agent": [
+    "Strictly adhere to the 'Swiss & High-Contrast' archetype (Archetype 4). Do not introduce soft UI, heavy drop shadows, or large border radii. Everything should feel crisp, authoritative, and data-first.",
+    "Configure tailwind.config.js to extend the font family mapping: 'heading' to Cabinet Grotesk, 'sans' to IBM Plex Sans, and 'mono' to IBM Plex Mono.",
+    "Use Phosphor icons. Make sure to run 'yarn add @phosphor-icons/react'.",
+    "Implement the 'Control Room' grid for the dashboard. Use explicit col-span logic. Data panels must stretch to fill vertical space identically to their neighbors.",
+    "Do not use generic 'card' wrappers with soft shadows. Use hard 1px borders (`border-[#E5E5E5]`) with flat white backgrounds (`bg-white`) and `rounded-none`.",
+    "The hero image on the auth screen MUST have a strong overlay (e.g., `bg-white/80` or `bg-[#FAFAFA]/90` with `backdrop-blur-sm`) so the login form is perfectly legible.",
+    "Ensure all severity badges match the explicit hex codes defined in the colors section to ensure rapid scanning by auditors.",
+    "Add 'data-testid' to all interactive elements (buttons, links, form inputs) for testing.",
+    "For Shadcn components, override default Vercel-like styles: remove border radius (rounded-md -> rounded-none), remove box-shadows, and use the strict border colors defined.",
+    "CRITICAL: Include the provided font imports in index.css so Cabinet Grotesk and IBM fonts are loaded."
+  ]
+}
