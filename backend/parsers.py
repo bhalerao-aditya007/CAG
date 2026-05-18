@@ -13,7 +13,8 @@ A unified transaction is a dict with the following optional keys:
   centage_amount, balance_amount, remark, work_order_date, time_limit_months,
   stipulated_completion_date, last_ra_bill_date, ra_bill_payment_date,
   payment_mode, classification_head, percent_above_below, road_code,
-  km_start, km_end, source_file, row_ref, award_year, division
+  km_start, km_end, source_file, row_ref, award_year, division,
+  ts_date, aa_date, receipt_date, cumulative_receipt_amount
 """
 from __future__ import annotations
 import re
@@ -44,9 +45,7 @@ def _to_float(v: Any) -> float | None:
     s = str(v).strip()
     if not s or s.lower() in {"nil", "na", "n/a", "-"}:
         return None
-    # strip currency/letters, retain digits and dot and minus
     s = s.replace(",", "").replace("₹", "").replace("Rs.", "").replace("Rs", "").strip()
-    # extract first numeric token
     m = re.search(r"-?\d+(?:\.\d+)?", s)
     if not m:
         return None
@@ -89,7 +88,7 @@ FIELD_ALIASES = {
     "work_name": ["name_of_work", "work_name", "particulars_of_work", "name_of_the_work", "description_of_work", "particulars"],
     "contractor_name": ["contractor_name", "name_of_contractor", "contractor", "payee", "payee_name", "firm_name"],
     "contract_cost": ["contract_cost", "contract_amount", "agreement_cost", "agreement_amount", "tender_cost"],
-    "aa_amount": ["aa_amount", "aa_cost", "administrative_approval", "administrative_approval_amount", "approved_cost"],
+    "aa_amount": ["aa_amount", "aa_cost", "administrative_approval", "administrative_approval_amount", "approved_cost", "aa"],
     "tech_sanction_cost": ["technical_sanction_cost", "tech_sanction_cost", "ts_cost", "tech_sanction"],
     "cumulative_expenditure": ["cumulative_expenditure", "up_to_date_expenditure", "upto_date_expenditure", "total_expenditure", "expenditure", "progressive_expenditure"],
     "bill_amount": ["bill_amount", "ra_bill_amount", "amount"],
@@ -107,6 +106,11 @@ FIELD_ALIASES = {
     "road_code": ["road_code", "road_no", "mdr_no", "sh_no", "nh_no", "road_name"],
     "award_year": ["year", "award_year", "financial_year"],
     "division": ["division", "division_name", "ddo"],
+    # New fields for R18, R19, R20
+    "ts_date": ["ts_date", "technical_sanction_date", "date_of_ts", "ts_accorded_on", "date_of_technical_sanction"],
+    "aa_date": ["aa_date", "administrative_approval_date", "date_of_aa", "aa_accorded_on", "date_of_administrative_approval"],
+    "receipt_date": ["receipt_date", "date_of_receipt", "fund_received_date", "deposit_received_date", "receipt_of_fund_date"],
+    "cumulative_receipt_amount": ["cumulative_receipt_amount", "total_receipt", "receipt_amount", "amount_received", "cumulative_receipt", "total_receipts"],
 }
 
 
@@ -118,14 +122,15 @@ def _map_row(row: dict) -> dict:
             if a in normed and normed[a] not in (None, ""):
                 out[canonical] = normed[a]
                 break
-    # also retain anything not matched for debugging in 'raw'
     out["_raw"] = {k: (v.isoformat() if isinstance(v, (datetime, date)) else v) for k, v in row.items() if pd.notna(v) if not isinstance(v, float) or not pd.isna(v)} if row else {}
     # normalize numeric / date fields
     for k in ("contract_cost", "aa_amount", "tech_sanction_cost", "cumulative_expenditure",
-              "bill_amount", "centage_amount", "balance_amount", "percent_above_below", "time_limit_months"):
+              "bill_amount", "centage_amount", "balance_amount", "percent_above_below",
+              "time_limit_months", "cumulative_receipt_amount"):
         if k in out:
             out[k] = _to_float(out[k])
-    for k in ("work_order_date", "stipulated_completion_date", "last_ra_bill_date", "ra_bill_payment_date"):
+    for k in ("work_order_date", "stipulated_completion_date", "last_ra_bill_date",
+              "ra_bill_payment_date", "ts_date", "aa_date", "receipt_date"):
         if k in out:
             out[k] = _to_date(out[k])
     # string fields - clean up
@@ -159,11 +164,9 @@ def parse_excel(content: bytes, filename: str, declared_type: str | None = None)
             df = pd.read_excel(xls, sheet_name=sheet, dtype=object)
         except Exception:
             continue
-        # Find header row: pick the row where >=3 cells contain letters (likely header)
         if df.empty:
             continue
         df = df.dropna(how="all").reset_index(drop=True)
-        # If first row doesn't look like header, try to detect header row
         header_idx = 0
         for i in range(min(5, len(df))):
             row_vals = [str(x) for x in df.iloc[i].tolist() if pd.notna(x)]
@@ -176,7 +179,6 @@ def parse_excel(content: bytes, filename: str, declared_type: str | None = None)
             df = df.iloc[header_idx + 1:].reset_index(drop=True)
         for _, r in df.iterrows():
             d = r.to_dict()
-            # skip totally empty rows
             if all((pd.isna(v) or str(v).strip() == "") for v in d.values()):
                 continue
             mapped = _map_row(d)
@@ -207,7 +209,6 @@ def parse_pdf(content: bytes, filename: str, declared_type: str | None = None) -
                     mapped["source_page"] = pg_idx + 1
                     mapped["type"] = declared_type or _guess_type(mapped)
                     rows.append(mapped)
-            # also scan text for cashbook style entries (voucher no, amount, HR)
             text = page.extract_text() or ""
             if "cash book" in text.lower() or "form 10" in text.lower() or "voucher" in text.lower():
                 for line in text.split("\n"):
