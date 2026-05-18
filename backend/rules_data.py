@@ -1,5 +1,5 @@
 """
-Static metadata for all 17 PWD audit red flag rules.
+Static metadata for all 20 PWD audit red flag rules.
 Used for displaying rule library & enriching red flag records.
 """
 
@@ -190,6 +190,40 @@ RULES = [
         "severity": "high",
         "parameter": "amount > 1000000 AND classification_head is empty",
         "applies_to": "cashbook",
+    },
+    # ---- NEW RULES ----
+    {
+        "id": "R18",
+        "code": "TS_BEFORE_AA",
+        "title": "Irregular approval of Technical Sanction prior to Administrative Approval",
+        "criteria": "Every work requires Administrative Approval (AA) from the concerned department first, followed by Technical Sanction (TS) from the competent technical authority on a detailed estimate.",
+        "source": "BEAMS - Capital Works Utilisation Certificate",
+        "detection": "If the TS date in the Utilisation Certificate is earlier than the AA date, it indicates TS was accorded prior to AA — an irregular sequence.",
+        "severity": "high",
+        "parameter": "ts_date < aa_date",
+        "applies_to": "capital_work",
+    },
+    {
+        "id": "R19",
+        "code": "BLOCKING_OF_FUNDS",
+        "title": "Blocking of funds due to non-execution of deposit works",
+        "criteria": "Para 173 of GoM Budget Manual prohibits retention of unspent grant by Controlling Officers; any unspent amount should be immediately returned to the Administrative Department.",
+        "source": "BEAMS - Deposit Works Utilisation Certificate",
+        "detection": "If the UC for a deposit work shows no expenditure incurred AND the entire balance is lying with the DDO AND funds were received more than one year ago.",
+        "severity": "critical",
+        "parameter": "cumulative_expenditure == 0 AND balance_amount > 0 AND fund_receipt_date > 1 year ago",
+        "applies_to": "deposit_work",
+    },
+    {
+        "id": "R20",
+        "code": "SHORT_RECEIPT_DEPOSIT",
+        "title": "Short receipt of funds from user department (Deposit Work)",
+        "criteria": "Para 303 of the MPW Manual: the required contribution for a deposit work should be realized before any liability is incurred.",
+        "source": "BEAMS - Deposit Works Utilisation Certificate",
+        "detection": "If the AA cost of the work does not match the cumulative amount shown under Receipt Details in the UC, indicating short receipt of funds.",
+        "severity": "high",
+        "parameter": "aa_amount != cumulative_receipt_amount (receipt < aa_amount)",
+        "applies_to": "deposit_work",
     },
 ]
 
