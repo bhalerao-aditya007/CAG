@@ -1,4 +1,4 @@
-"""Deterministic rules engine - applies 17 PWD red flag rules to parsed transactions.
+"""Deterministic rules engine - applies 20 PWD red flag rules to parsed transactions.
 
 A red flag is a dict:
   rule_id, severity, transaction_id, evidence (dict), reason (str)
@@ -61,7 +61,6 @@ def check_r01_diversion(tx: dict):
     work_name = _norm_remark(tx.get("work_name"))
     if not remark or not work_name:
         return None
-    # If remark text doesn't share any significant token with work_name => diversion
     def tokens(s):
         return {w for w in re.findall(r"[a-z0-9]+", s) if len(w) > 3}
     common = tokens(remark) & tokens(work_name)
@@ -110,7 +109,6 @@ def check_r05_delay_completion(tx: dict):
     if stip and stip < _today():
         cum_exp = tx.get("cumulative_expenditure") or 0
         cc = tx.get("contract_cost") or 0
-        # only flag if work is not fully paid (<95% complete)
         if cc == 0 or cum_exp < cc * 0.95:
             return _make_flag("R05", tx,
                 {"stipulated_completion_date": stip.isoformat(), "today": _today().isoformat(),
@@ -231,6 +229,52 @@ def check_r17_no_classification(tx: dict):
     return None
 
 
+# ---- NEW: R18 - TS before AA ----
+def check_r18_ts_before_aa(tx: dict):
+    if tx.get("type") != "capital_work":
+        return None
+    ts_date = _parse_date(tx.get("ts_date"))
+    aa_date = _parse_date(tx.get("aa_date"))
+    if ts_date and aa_date and ts_date < aa_date:
+        return _make_flag("R18", tx,
+            {"ts_date": ts_date.isoformat(), "aa_date": aa_date.isoformat()},
+            f"Technical Sanction accorded on {ts_date.isoformat()} is prior to Administrative Approval on {aa_date.isoformat()} — irregular sequence violating procurement rules.")
+    return None
+
+
+# ---- NEW: R19 - Blocking of funds (deposit work, no expenditure >1 year) ----
+def check_r19_blocking_of_funds(tx: dict):
+    if tx.get("type") != "deposit_work":
+        return None
+    exp = tx.get("cumulative_expenditure") or 0
+    balance = tx.get("balance_amount") or 0
+    receipt_date = _parse_date(tx.get("receipt_date") or tx.get("work_order_date") or tx.get("ra_bill_payment_date"))
+    if exp == 0 and balance > 0 and receipt_date:
+        one_year_ago = _today() - timedelta(days=365)
+        if receipt_date < one_year_ago:
+            return _make_flag("R19", tx,
+                {"cumulative_expenditure": exp, "balance_amount": balance,
+                 "receipt_date": receipt_date.isoformat(), "days_blocked": (_today() - receipt_date).days},
+                f"Deposit work has zero expenditure with ₹{balance:,.0f} balance lying with DDO since {receipt_date.isoformat()} (>{(_today() - receipt_date).days} days) — funds blocked without utilization.")
+    return None
+
+
+# ---- NEW: R20 - Short receipt from user department ----
+def check_r20_short_receipt(tx: dict):
+    if tx.get("type") != "deposit_work":
+        return None
+    aa = tx.get("aa_amount") or 0
+    receipt = tx.get("cumulative_receipt_amount") or tx.get("receipt_amount") or 0
+    if aa > 0 and receipt > 0 and receipt < aa * 0.99:  # allow 1% tolerance
+        shortfall = aa - receipt
+        pct = shortfall / aa * 100
+        return _make_flag("R20", tx,
+            {"aa_amount": aa, "cumulative_receipt_amount": receipt,
+             "shortfall": round(shortfall, 2), "shortfall_percent": round(pct, 1)},
+            f"AA cost ₹{aa:,.0f} but only ₹{receipt:,.0f} received from user department (shortfall ₹{shortfall:,.0f}, {pct:.1f}%) — work tendered before full deposit received, violating MPW Manual Para 303.")
+    return None
+
+
 # -------- Cross-transaction rules --------
 def check_r04_overlapping(transactions: list[dict]) -> list[dict]:
     flags = []
@@ -247,7 +291,6 @@ def check_r04_overlapping(transactions: list[dict]) -> list[dict]:
                 bk1, bk2 = b.get("km_start"), b.get("km_end")
                 if None in (ak1, ak2, bk1, bk2):
                     continue
-                # overlap check
                 if min(ak2, bk2) > max(ak1, bk1):
                     flags.append(_make_flag("R04", a,
                         {"road_code": code,
@@ -318,7 +361,6 @@ def check_r15_split_higher(transactions: list[dict]) -> list[dict]:
                 bk1, bk2 = b.get("km_start"), b.get("km_end")
                 if None in (ak1, ak2, bk1, bk2):
                     continue
-                # adjacent (endpoint touches within 1 km)
                 if abs(ak2 - bk1) < 1 or abs(bk2 - ak1) < 1:
                     flags.append(_make_flag("R15", a,
                         {"road_code": code,
@@ -334,6 +376,8 @@ PER_ROW_CHECKS = [
     check_r05_delay_completion, check_r07_no_centage, check_r08_unspent_balance,
     check_r09_excess_25, check_r10_abandoned, check_r12_parking,
     check_r13_14_delay_penalty_bg, check_r16_hand_receipt, check_r17_no_classification,
+    # New rules
+    check_r18_ts_before_aa, check_r19_blocking_of_funds, check_r20_short_receipt,
 ]
 
 CROSS_CHECKS = [check_r04_overlapping, check_r06_splitting_contractor,
@@ -350,8 +394,7 @@ def evaluate(transactions: list[dict]) -> list[dict]:
                     flags.extend(res)
                 elif res:
                     flags.append(res)
-            except Exception as e:
-                # don't crash on one bad row
+            except Exception:
                 continue
     for check in CROSS_CHECKS:
         try:
