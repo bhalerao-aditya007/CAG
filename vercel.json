@@ -2,16 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/server.py",
-      "use": "@vercel/python"
-    },
-    {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "frontend/build"
+        "distDir": "build",
+        "installCommand": "npm install --legacy-peer-deps"
       }
     }
   ],
-  ...
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "frontend/$1"
+    }
+  ]
 }
