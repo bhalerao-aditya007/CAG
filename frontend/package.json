@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
+  },
+  "overrides": {
+    "ajv": "^8.17.1"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
